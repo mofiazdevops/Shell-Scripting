@@ -1,0 +1,50 @@
+#!/bin/bash
+
+<< task
+Deploy a Django app
+and handle the code for errors
+task
+
+code_clone() {
+    echo "[+] Cloning the repository..."
+    git clone https://github.com/mofiazdevops/new-project.git
+    
+}
+
+install_requirements() {
+    echo "[+] Installing dependencies..."
+    sudo apt-get update
+    sudo apt-get install docker.io nginx -y
+}
+
+required_restarts() {
+    echo "[+] Enabling Docker and Nginx services..." 
+    sudo chown $USER /var/run/docker.sock 
+    sudo systemctl enable docker
+    sudo systemctl enable nginx
+    sudo systemctl restart docker
+    sudo systemctl start nginx
+}
+
+deploy() {
+    echo "[+] Deploying Docker container..."
+    docker build -t notes_app .
+    docker run -d -p 8000:8000 notes_app
+}
+
+echo "****** DEPLOYMENT STARTED ******"
+
+if ! install_requirements; then
+	echo "Installation failed"
+	exit 1
+fi
+
+if ! code_clone; then
+	echo "The code directory already exist"
+	cd new-project
+fi
+required_restarts
+deploy
+
+echo "****** DEPLOYMENT COMPLETED ******"
+
